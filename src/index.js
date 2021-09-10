@@ -49,6 +49,79 @@ class Board extends React.Component {
   }
 }
 
+function GameStatus(props){
+  let status;
+  if ( props.winner ){
+    status = 'Winner: ' + props.winner;
+  } else {
+    if ( props.history.length < 9 ){
+      status = 'Next player: ' + (props.xIsNext ? 'X' : 'O');
+    } else {
+      status = 'Draw ..';
+    }
+  }
+
+  return(
+    <div>{ status }</div>
+  );
+}
+
+class GameHistory extends React.Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      orderAsc : true,
+    };
+  }
+
+  orderHistory(){
+    this.setState({
+      orderAsc : !this.state.orderAsc,
+    });
+  }
+
+  render(){
+    const sortLabel = this.state.orderAsc ? 'ASC' : 'DESC';
+    let history = this.props.history.slice(0, this.props.stepNumber + 1);
+    if (! this.state.orderAsc ){
+      history = history.sort((a, b) => {
+        return (a.stepNumber > b.stepNumber) ? -1 : 1;
+      });
+    }
+
+    const order = <div><button onClick={() => this.orderHistory()}>SORT {sortLabel}</button></div>
+
+    const moves = history.map((step) => {
+      const stepNumber = step.stepNumber;
+      const row = Math.ceil(step.currentIndex / 3);
+      const col = (step.currentIndex % 3) + 1;
+      const desc = stepNumber ?
+        'Go to move row=' + row + '/col=' + col :
+        'Go to game start';
+      if ( this.props.stepNumber === stepNumber ){
+        return (
+          <li key={stepNumber}>
+            <button onClick={() => this.jumpTo(stepNumber)}><strong>{desc}</strong></button>
+          </li>
+        );
+      } else {
+        return (
+          <li key={stepNumber}>
+            <button onClick={() => this.jumpTo(stepNumber)}>{desc}</button>
+          </li>
+        );
+      }
+    });
+
+    return(
+      <div>
+        <div>{ order }</div>
+        <ol>{ moves }</ol>
+      </div>
+    );
+  }
+}
+
 class Game extends React.Component {
   constructor(props){
     super(props);
@@ -90,59 +163,14 @@ class Game extends React.Component {
     });
   }
 
-  orderHistory(){
-    this.setState({
-      stepNumber : this.state.history.length -1,
-      orderAsc : !this.state.orderAsc,
-    });
-  }
-
   render() {
     let history = this.state.history.slice();
     const current = history[this.state.stepNumber];
     const winner = calcarateWinner(current.squares);
 
-    const sortLabel = this.state.orderAsc ? 'ASC' : 'DESC';
-    if (! this.state.orderAsc ){
-      history = history.sort((a, b) => {
-        return (a.stepNumber > b.stepNumber) ? -1 : 1;
-      });
-    }
-    const order = <div><button onClick={() => this.orderHistory()}>SORT {sortLabel}</button></div>
-
-    const moves = history.map((step) => {
-      const stepNumber = step.stepNumber;
-      const row = Math.ceil(step.currentIndex / 3);
-      const col = (step.currentIndex % 3) + 1;
-      const desc = stepNumber ?
-        'Go to move row=' + row + '/col=' + col :
-        'Go to game start';
-      if ( this.state.stepNumber === stepNumber ){
-        return (
-          <li key={stepNumber}>
-            <button onClick={() => this.jumpTo(stepNumber)}><strong>{desc}</strong></button>
-          </li>
-        );
-      } else {
-        return (
-          <li key={stepNumber}>
-            <button onClick={() => this.jumpTo(stepNumber)}>{desc}</button>
-          </li>
-        );
-      }
-    });
-
-    let status;
     let lastIndex = null;
     if ( winner ){
-      status = 'Winner: ' + winner;
       lastIndex = this.state.history[this.state.history.length-1].currentIndex;
-    } else {
-      if ( history.length < 9 ){
-        status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-      } else {
-        status = 'Draw ..';
-      }
     }
 
     return (
@@ -155,9 +183,15 @@ class Game extends React.Component {
           />
         </div>
         <div className="game-info">
-          <div>{ status }</div>
-          <div>{ order }</div>
-          <ol>{ moves }</ol>
+          <GameStatus
+            winner={winner}
+            history={history}
+            xIsNext={this.state.xIsNext}
+          />
+          <GameHistory
+            history={history}
+            stepNumber={this.state.stepNumber}
+          />
         </div>
       </div>
     );
