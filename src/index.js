@@ -138,7 +138,11 @@ class Game extends React.Component {
       status = 'Winner: ' + winner;
       lastIndex = this.state.history[this.state.history.length-1].currentIndex;
     } else {
-      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+      if ( history.length < 9 ){
+        status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+      } else {
+        status = 'Draw ..';
+      }
     }
 
     return (
