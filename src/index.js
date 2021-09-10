@@ -6,7 +6,7 @@ import './index.css';
 function Square(props){
   return (
     <button
-      className="square"
+      className={`square ${props.highlight ? 'highlight' : ''}`}
       onClick={props.onClick}
     >
       {props.value}
@@ -16,8 +16,10 @@ function Square(props){
 
 class Board extends React.Component {
   renderSquare(i) {
+    let highlight = this.props.highlightIndex === i ;
     return <Square
       value={this.props.squares[i]}
+      highlight={highlight}
       onClick={() => this.props.onClick(i)}
     />;
   }
@@ -131,8 +133,10 @@ class Game extends React.Component {
     });
 
     let status;
+    let lastIndex = null;
     if ( winner ){
       status = 'Winner: ' + winner;
+      lastIndex = this.state.history[this.state.history.length-1].currentIndex;
     } else {
       status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
     }
@@ -142,6 +146,7 @@ class Game extends React.Component {
         <div className="game-board">
           <Board
             squares={current.squares}
+            highlightIndex={lastIndex}
             onClick={(i) => this.handleClick(i)}
           />
         </div>
